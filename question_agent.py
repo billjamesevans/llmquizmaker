@@ -5,16 +5,12 @@ Run:
 
     python question_agent.py docs/lesson1.pdf docs/lesson2.pdf
 """
-import os
 import sys
-import math
-import readline  # for arrow-key history on *nix
 from pathlib import Path
 from typing import List, Optional
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, TextStreamer
-from accelerate import infer_auto_device_map, init_empty_weights
 import typer
 import ruamel.yaml as yaml
 
@@ -28,8 +24,8 @@ DEFAULT_CFG = {
     "max_tokens": 512,
     "temperature": 0.7,
     "question_prompt": (
-        "You are an expert tutor. Read the following passage and generate "
-        "three clear, concise, thought-provoking questions that test deep understanding.\n\n"
+        "You are an expert tutor. Read the following passage and generate {n} "
+        "clear, concise, thought-provoking questions that test deep understanding.\n\n"
         "{text}\n\nQUESTIONS:"
     ),
     "chunk_tokens": 2048,
@@ -52,8 +48,6 @@ class QuestionAgent:
     # ---------- model ----------
     def _load_model(self):
         print("🔄  Loading model… (first time only)")
-        quant = "4-bit" if self.cfg["load_4bit"] else "8-bit"
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         kwargs = dict(
             device_map="auto",
             torch_dtype=torch.float16,
@@ -93,17 +87,17 @@ class QuestionAgent:
         ]
 
     # ---------- generation ----------
-    def _build_prompt(self, chunk: str) -> str:
-        return self.cfg["question_prompt"].format(text=chunk)
+    def _build_prompt(self, chunk: str, n: int) -> str:
+        return self.cfg["question_prompt"].format(text=chunk, n=n)
 
     def ask(self, n_questions: int = 3):
         if not self.corpus_chunks:
             print("⚠️  No PDFs loaded yet.")
             return
         for chunk in self.corpus_chunks:
-            prompt = self._build_prompt(chunk)
+            prompt = self._build_prompt(chunk, n_questions)
             inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
-            gen_tokens = self.model.generate(
+            self.model.generate(
                 **inputs,
                 max_new_tokens=self.cfg["max_tokens"],
                 temperature=self.cfg["temperature"],
