@@ -13,6 +13,10 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, TextStreamer
 import typer
 import ruamel.yaml as yaml
+from ruamel.yaml import YAML
+
+# loader with safe settings for ruamel.yaml
+yaml_loader = YAML(typ="safe", pure=True)
 
 from pdf_loader import pdf_to_text
 
@@ -153,7 +157,7 @@ def set(
     if key == "style":
         agent.set_style(value)
     else:
-        agent.cfg[key] = yaml.safe_load(value)
+        agent.cfg[key] = yaml_loader.load(value)
         print(f"🔧  cfg[{key}] = {agent.cfg[key]}")
 
 
@@ -176,7 +180,7 @@ def main(pdf_files: List[str]):
     # read config if exists
     cfg = DEFAULT_CFG.copy()
     if Path(CFG_FILE).exists():
-        cfg.update(yaml.safe_load(Path(CFG_FILE).read_text()))
+        cfg.update(yaml_loader.load(Path(CFG_FILE).read_text()))
     agent = QuestionAgent(cfg)
     for p in pdf_files:
         agent.add_pdf(Path(p))
