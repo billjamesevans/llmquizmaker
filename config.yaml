@@ -3,5 +3,5 @@ load_4bit: false          # set true to save RAM
 temperature: 0.35
 chunk_tokens: 1024
 question_prompt: |
-  You are a senior lecturer. After reading the passage, generate five
+  You are a senior lecturer. After reading the passage, generate {n}
   short-answer questions that require critical thinking. Avoid yes/no answers.
