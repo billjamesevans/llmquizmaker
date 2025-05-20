@@ -1,0 +1,6 @@
+{
+  "load_4bit": false,
+  "temperature": 0.35,
+  "chunk_tokens": 1024,
+  "question_prompt": "You are a senior lecturer. After reading the passage, generate {n}\n  short-answer questions that require critical thinking. Avoid yes/no answers."
+}

@@ -5,4 +5,3 @@ bitsandbytes           # optional – for 4-bit loading
 sentencepiece
 PyPDF2                 # or pdfplumber if you prefer
 typer[all]             # makes the CLI pretty
-ruamel.yaml            # for config override

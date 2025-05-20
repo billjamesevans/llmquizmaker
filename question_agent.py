@@ -12,16 +12,12 @@ from typing import List, Optional
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, TextStreamer
 import typer
-import ruamel.yaml as yaml
-from ruamel.yaml import YAML
-
-# loader with safe settings for ruamel.yaml
-yaml_loader = YAML(typ="safe", pure=True)
+import json
 
 from pdf_loader import pdf_to_text
 
 # ---------- defaults ----------
-CFG_FILE = "config.yaml"
+CFG_FILE = "config.json"
 DEFAULT_CFG = {
     "model_name": "mistralai/Mistral-7B-Instruct-v0.2",
     "load_4bit": True,
@@ -118,7 +114,7 @@ class QuestionAgent:
         print("📝  Question style updated.")
 
     def show_cfg(self):
-        print(yaml.dump(self.cfg, Dumper=yaml.RoundTripDumper))
+        print(json.dumps(self.cfg, indent=2))
 
 # ---------------- CLI commands ----------------
 agent: Optional[QuestionAgent] = None  # will instantiate in main()
@@ -157,7 +153,10 @@ def set(
     if key == "style":
         agent.set_style(value)
     else:
-        agent.cfg[key] = yaml_loader.load(value)
+        try:
+            agent.cfg[key] = json.loads(value)
+        except json.JSONDecodeError:
+            agent.cfg[key] = value
         print(f"🔧  cfg[{key}] = {agent.cfg[key]}")
 
 
@@ -180,7 +179,11 @@ def main(pdf_files: List[str]):
     # read config if exists
     cfg = DEFAULT_CFG.copy()
     if Path(CFG_FILE).exists():
-        cfg.update(yaml_loader.load(Path(CFG_FILE).read_text()))
+        with open(CFG_FILE) as f:
+            try:
+                cfg.update(json.load(f))
+            except json.JSONDecodeError as e:
+                print(f"⚠️  Failed to load {CFG_FILE}: {e}")
     agent = QuestionAgent(cfg)
     for p in pdf_files:
         agent.add_pdf(Path(p))
