@@ -31,4 +31,4 @@ Once running you can use the built‑in commands:
 * `show` – display current configuration.
 * `quit` – exit the program.
 
-Configuration defaults can be changed in `config.yaml`.
+Configuration defaults can be changed in `config.json`.
